@@ -1,6 +1,7 @@
-# SPH2D-Taichi
+# SPH-2D-Taichi
 
-Simple 2D SPH fluid simulation implemented using [**taichi**](https://taichi.readthedocs.io/en/stable/) and python.
+Simple 2D Smooth Particle Hydrodynamics(SPH) based fluid simulation implemented using [**taichi**](https://taichi.readthedocs.io/en/stable/) and python.
+
 Weakly compressible SPH (WCSPH) and Predictive-Corrective Incompressible SPH (PCISPH) are implemented in the project.
 
 ## Tested Environment
