@@ -11,10 +11,10 @@ class Grid(object):
         self.MAX_NUM_PARTICLES_PER_CELL = 500
         self.MAX_NUM_NEIGHBORS = 500
 
-        self.grid_num_particles = ti.field(ti.i32)
-        self.grid2particles = ti.field(ti.i32)
-        self.particle_num_neighbors = ti.field(ti.i32)
-        self.particle_neighbors = ti.field(ti.i32)
+        self.grid_num_particles = ti.field(int)
+        self.grid2particles = ti.field(int)
+        self.particle_num_neighbors = ti.field(int)
+        self.particle_neighbors = ti.field(int)
 
         self.cell_size = cell_size
         self.grid_dim = np.ceil( np.array(boundary) / cell_size).astype(int)

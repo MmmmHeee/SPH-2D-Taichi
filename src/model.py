@@ -242,13 +242,15 @@ class PCISPH(BaseSPH):
                 base_sph_model = BaseSPH(),
                 fluctuation_threshold = 0.001,
                 least_iteration = 5,
-                dt = 0.0008
+                max_iteration = 1e4,
+                dt = 0.0008,
                 ):
 
         super(PCISPH, self).__init__(**base_sph_model.__dict__)
         
         self.fluctuation_threshold = fluctuation_threshold # fluctuation limit (max_density_error < 0.01)
         self.least_iteration = least_iteration # the minimum times of iteration
+        self.max_iteration = max_iteration # the maximum times of iteration
         self.dt = dt # timestep
 
         self.predicted_position = ti.Vector.field(2, dtype = float)
@@ -413,7 +415,7 @@ class PCISPH(BaseSPH):
                 self.particle_position[pa_idx] += self.particle_velocity[pa_idx] * self.dt
                 
                 pos_a = self.particle_position[pa_idx]
-                vel_a = self.particle_velocity[pa_idx]
+                # vel_a = self.particle_velocity[pa_idx]
 
                 ## the deltatime update method is not that stable
                 # density = self.particle_density[pa_idx]
@@ -429,7 +431,7 @@ class PCISPH(BaseSPH):
                     vel_b = self.particle_velocity[pb_idx]
 
                     x_ab = pos_a - pos_b
-                    v_ab = vel_a - vel_b
+                    # v_ab = vel_a - vel_b
 
                     # if self.particle_is_fluid[nb_idx] == 1:
                     #     density += self.rho_dt(v_ab, x_ab) * self.dt
@@ -454,8 +456,8 @@ class PCISPH(BaseSPH):
             self.calcVelocityChangeForCorrectedPressure()
             
             it += 1
-            if it > 1e3:
-                print("After 1000 iterations still cannot converge")
+            if it > self.max_iteration:
+                print("After" + str(self.max_iteration) + "iterations still cannot converge")
                 print("Error:", self.max_density_error[None])
                 break
 

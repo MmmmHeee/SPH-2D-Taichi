@@ -14,7 +14,7 @@ class World(object):
         
         self.particle_position = ti.Vector.field(2, dtype=float)
         self.particle_velocity = ti.Vector.field(2, dtype=float)
-        self.particle_is_fluid = ti.field(dtype = ti.i32)
+        self.particle_is_fluid = ti.field(dtype = int)
         self.particle_density = ti.field(dtype = float)
 
         ti.root.dense(ti.i, self.particle_num).place(

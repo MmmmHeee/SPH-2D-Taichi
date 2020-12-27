@@ -19,7 +19,7 @@ import renderer as R
 
 # init taichi
 # ti.init(arch=ti.gpu, default_fp = ti.f64)
-ti.init(arch=ti.gpu, default_fp = ti.f64)
+ti.init(default_fp = ti.f64)
 
 __SCREEN_RES = (400, 400)
 __WORLD_TO_SCREEN_RATIO = 40
