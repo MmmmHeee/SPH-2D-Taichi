@@ -92,7 +92,7 @@ class BaseSPH(object):
     def vel_dt_from_pressure(self, Pa, Pb, rho_a, rho_b, x_ab):
         # WCSPH equation (6) without gravity
         # Compute the pressure force contribution, Symmetric Formula
-        res = ti.Vector([0.0, 0.0], dt=ti.f64)
+        res = ti.Vector([0.0, 0.0], dt=float)
         res = -self.m * (Pa / rho_a ** 2 + Pb / rho_b ** 2) * self.pressureGrad(x_ab, self.dh)
         return res
 
@@ -100,7 +100,7 @@ class BaseSPH(object):
     def vel_dt_from_viscosity(self, rho_a, rho_b, v_ab, x_ab):
         # WCSPH equation (10)
         # Compute the viscosity force contribution, artificial viscosity
-        res = ti.Vector([0.0, 0.0], dt=ti.f64)
+        res = ti.Vector([0.0, 0.0], dt=float)
         v_dot_x = v_ab.dot(x_ab)
         if v_dot_x < 0:
             # Artifical viscosity
@@ -110,7 +110,7 @@ class BaseSPH(object):
         return res
 
     @ti.kernel
-    def calcMass(self) -> ti.f64:
+    def calcMass(self) -> float:
         # calculate mass so that it fits the radius of kernel and reference density
         density_sum = 0.
         half_range = self.dh / self.dx
@@ -118,10 +118,10 @@ class BaseSPH(object):
         # filled neighbor with particle distance self.dx
         for i_x in range(-half_range, half_range + 1):
             for i_y in range(-half_range, half_range + 1):
-                r = ti.Vector([i_x, i_y], dt=ti.f64) * self.dx
+                r = ti.Vector([i_x, i_y], dt=float) * self.dx
                 density_sum += self.rho_sum(r) / self.m
 
-        return ti.cast(self.rho_0 / density_sum, ti.f64) # reference to WCSPH equation (4)
+        return ti.cast(self.rho_0 / density_sum, float) # reference to WCSPH equation (4)
 
     @ti.kernel
     def enforcingBoundary(self):
@@ -166,9 +166,9 @@ class WCSPH(BaseSPH):
 
         self.dt = dt
 
-        self.particle_pressure = ti.var(dt = ti.f64) # save particle pressure
-        self.d_density = ti.var(dt = ti.f64) # save the change of density 
-        self.d_velocity = ti.Vector(2, dt=ti.f64) # and velocity
+        self.particle_pressure = ti.var(dt = float) # save particle pressure
+        self.d_density = ti.var(dt = float) # save the change of density 
+        self.d_velocity = ti.Vector(2, dt=float) # and velocity
 
         ti.root.dense(ti.i, particle_num).place(self.particle_pressure)
         ti.root.dense(ti.i, particle_num).place(self.d_density, self.d_velocity)
@@ -192,7 +192,7 @@ class WCSPH(BaseSPH):
                 rho_a = self.particle_density[pa_idx] # density
                 P_a = self.particle_pressure[pa_idx] # pressure
 
-                d_v = ti.Vector([0.0, 0.0], dt=ti.f64)
+                d_v = ti.Vector([0.0, 0.0], dt=float)
                 d_rho = 0
                 for nb_idx in range(self.particle_num_neighbors[pa_idx]):
                     pb_idx = self.particle_neighbors[pa_idx, nb_idx]
@@ -251,35 +251,35 @@ class PCISPH(BaseSPH):
         self.least_iteration = least_iteration # the minimum times of iteration
         self.dt = dt # timestep
 
-        self.predicted_position = ti.Vector(2, dt = ti.f64)
-        self.predicted_velocity = ti.Vector(2, dt = ti.f64)
-        self.predicted_density = ti.var(dt = ti.f64)
-        self.corrected_pressure = ti.var(dt = ti.f64)
+        self.predicted_position = ti.Vector.field(2, dtype = float)
+        self.predicted_velocity = ti.Vector.field(2, dtype = float)
+        self.predicted_density = ti.field(dtype = float)
+        self.corrected_pressure = ti.field(dtype = float)
         
-        self.dv_without_pressure = ti.Vector(2, dt=ti.f64)
-        self.dv_pressure = ti.Vector(2, dt=ti.f64)
+        self.dv_without_pressure = ti.Vector.field(2, dtype=float)
+        self.dv_pressure = ti.Vector.field(2, dtype=float)
 
         ti.root.dense(ti.i, particle_num).place(self.predicted_position, self.predicted_velocity, self.predicted_density,
                                                 self.corrected_pressure, self.dv_without_pressure, self.dv_pressure)
-        self.max_density_error = ti.var(dt=ti.f64, shape=())
+        self.max_density_error = ti.field(dtype=float, shape=())
         self.m = self.calcMass()
         self.delta = self.calcScalingFactor()
         
     @ti.kernel
-    def calcScalingFactor(self) -> ti.f64:
+    def calcScalingFactor(self) -> float:
         # ref to PCISPH equation(8)
         # calculate gradient dot and sum in filled neighbors
-        grad_sum = ti.Vector([0.0, 0.0], dt=ti.f64)
+        grad_sum = ti.Vector([0.0, 0.0], dt=float)
         grad_dot_sum = 0.0
         half_range = self.dh / self.dx
 
         # filled neighbor with particle distance self.dx
         for i_x in range(-half_range, half_range + 1):
             for i_y in range(-half_range, half_range + 1):
-                r = ti.Vector([i_x, i_y], dt=ti.f64) * ti.cast(self.dx, ti.f64)
+                r = ti.Vector([i_x, i_y], dt=float) * ti.cast(self.dx, float)
                 r_len = r.norm()
                 if r_len <= self.dh and r_len >= 1e-5:
-                    grad = self.factorGrad(r, ti.cast(self.dh, ti.f64))
+                    grad = self.factorGrad(r, ti.cast(self.dh, float))
                     grad_sum += grad
                     grad_dot_sum += grad.dot(grad)
         beta = 2 * (self.dt * self.m / self.rho_0)**2
@@ -294,7 +294,7 @@ class PCISPH(BaseSPH):
                 vel_a = self.particle_velocity[pa_idx] # velocity
                 rho_a = self.particle_density[pa_idx] # density
 
-                d_v = ti.Vector([0.0, 0.0], dt=ti.f64)
+                d_v = ti.Vector([0.0, 0.0], dt=float)
                 for nb_idx in range(self.particle_num_neighbors[pa_idx]):
                     pb_idx = self.particle_neighbors[pa_idx, nb_idx]
                     if self.particle_is_fluid[pb_idx] == 1:
@@ -322,7 +322,7 @@ class PCISPH(BaseSPH):
                 rho_a = self.particle_density[pa_idx] # density
                 P_a = self.corrected_pressure[pa_idx] # corrected pressure for prediction
 
-                d_v = ti.Vector([0.0, 0.0], dt=ti.f64)
+                d_v = ti.Vector([0.0, 0.0], dt=float)
                 for nb_idx in range(self.particle_num_neighbors[pa_idx]):
                     pb_idx = self.particle_neighbors[pa_idx, nb_idx]                       
                     if self.particle_is_fluid[nb_idx]:

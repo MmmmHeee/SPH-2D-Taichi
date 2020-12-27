@@ -11,10 +11,10 @@ class Grid(object):
         self.MAX_NUM_PARTICLES_PER_CELL = 500
         self.MAX_NUM_NEIGHBORS = 500
 
-        self.grid_num_particles = ti.var(ti.i32)
-        self.grid2particles = ti.var(ti.i32)
-        self.particle_num_neighbors = ti.var(ti.i32)
-        self.particle_neighbors = ti.var(ti.i32)
+        self.grid_num_particles = ti.field(ti.i32)
+        self.grid2particles = ti.field(ti.i32)
+        self.particle_num_neighbors = ti.field(ti.i32)
+        self.particle_neighbors = ti.field(ti.i32)
 
         self.cell_size = cell_size
         self.grid_dim = np.ceil( np.array(boundary) / cell_size).astype(int)
@@ -33,7 +33,7 @@ class Grid(object):
         self.particle_positions = particle_pos # a reference, not copy
 
     @ti.func
-    def getCellIndex(self, pos: ti.Vector) -> ti.Vector:
+    def getCellIndex(self, pos) -> ti.Vector:
         return (pos / self.cell_size).cast(int)
 
     @ti.kernel
@@ -47,7 +47,7 @@ class Grid(object):
             self.grid2particles[cell_idx, offs] = p_i
 
     @ti.func
-    def is_in_grid(self, c: ti.Vector) -> bool:
+    def is_in_grid(self, c) -> bool:
         return 0 <= c[0] and c[0] < self.grid_dim[0] and 0 <= c[1] and c[
             1] < self.grid_dim[1]
 

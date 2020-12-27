@@ -18,8 +18,8 @@ from world import World, WorldGen
 import renderer as R
 
 # init taichi
-# ti.init(arch=ti.gpu)
-ti.init()
+# ti.init(arch=ti.gpu, default_fp = ti.f64)
+ti.init(arch=ti.gpu, default_fp = ti.f64)
 
 __SCREEN_RES = (400, 400)
 __WORLD_TO_SCREEN_RATIO = 40
@@ -66,7 +66,8 @@ def main():
     base_sph = BaseSPH(boundary=world_bound, h_fac=__H_FAC)
     # sph_model = WCSPH(particle_num, base_sph_model=base_sph, dt=0.0001)
     sph_model = PCISPH(particle_num, base_sph_model=base_sph, dt=0.001)
-    
+    # sph_model = IISPH(particle_num, base_sph_model=base_sph, dt=0.001)
+
     # bind data
     gen.applyToWorld(world)
     sph_model.bindData(world.particle_position, world.particle_velocity, 
@@ -91,16 +92,16 @@ def main():
     while R.GUI.running:
         pos = R.taichiToRenderPos(world.particle_position)
         R.renderParticles(pos, colors)
-        # R.GUI.show() # comment this if you want to save frames
+        R.GUI.show() # comment this if you want to save frames
         
         ## Comment R.GUI.show() and 
         ## uncomment these lines to save frames into result folder
         #
-        if frame % frame_interval == 0:
-            save_count += 1
-            R.GUI.show(f'result/{save_count}.png')
-            if save_count / save_frame_rate >= save_time_total:
-                break
+        # if frame % frame_interval == 0:
+        #     save_count += 1
+        #     R.GUI.show(f'result/{save_count}.png')
+        #     if save_count / save_frame_rate >= save_time_total:
+        #         break
 
         simulator.update()
         frame += 1

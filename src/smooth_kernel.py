@@ -19,7 +19,7 @@ __VIS_LAP_FACTOR = 45 / math.pi
 __CUBIC_KERNEL_FACTOR = 10 / (7 * math.pi)
 
 @ti.func
-def poly6Kernel(r: ti.Vector, h):
+def poly6Kernel(r, h):
     # \frac{315}{64 \pi h^9} (h^2 - |r|^2)^3
 
     res = 0.0
@@ -30,10 +30,10 @@ def poly6Kernel(r: ti.Vector, h):
     return res
 
 @ti.func
-def poly6Grad(r: ti.Vector, h):
+def poly6Grad(r, h):
     # -\frac{945}{32 \pi h^9} (h^2 - |r|^2)^2 * r
 
-    res = ti.Vector([0.0, 0.0], dt = ti.f64)
+    res = ti.Vector([0.0, 0.0], dt = float)
     r_len = r.norm()
     if r_len <= h:
         h2 = h * h
@@ -43,7 +43,7 @@ def poly6Grad(r: ti.Vector, h):
 
 
 @ti.func
-def poly6Lap(r: ti.Vector, h):    
+def poly6Lap(r, h):    
     # \frac{945}{8 \pi h^9} (h^2 - |r|^2)^2 (|r|^2 - \frac{3}{4}(h^2 - |r|^2))
 
     res = 0.0
@@ -58,7 +58,7 @@ def poly6Lap(r: ti.Vector, h):
     return res
 
 @ti.func
-def spikyKernel(r: ti.Vector, h):
+def spikyKernel(r, h):
     # \frac{15}{\pi h^6} (h - r)^3 (r^2 - \frac{3}{4} (h^2 - r^2))
 
     res = 0.0
@@ -72,10 +72,10 @@ def spikyKernel(r: ti.Vector, h):
     return res
 
 @ti.func
-def spikyGrad(r: ti.Vector, h):
+def spikyGrad(r, h):
     # -\frac{45}{\pi h^6 |r|}(h - |r|)^2 * r
 
-    res = ti.Vector([0.0, 0.0], dt = ti.f64)
+    res = ti.Vector([0.0, 0.0], dt = float)
     r_len = r.norm()
     if r_len <= h:
         tmp = (h - r_len) / (h * h * h)
@@ -83,7 +83,7 @@ def spikyGrad(r: ti.Vector, h):
     return res
 
 @ti.func
-def viscosityKernel(r: ti.Vector, h):
+def viscosityKernel(r, h):
     # \frac{15}{2 \pi h^3} (-\frac{|r|^3}{2h^3} + \frac{|r|^2}{h^2} + \frac{h}{2|r|} - 1)
 
     res = 0.0
@@ -100,7 +100,7 @@ def viscosityKernel(r: ti.Vector, h):
     return res
 
 @ti.func
-def viscosityLap(r: ti.Vector, h):
+def viscosityLap(r, h):
     # \frac{45}{\pi h^6} (h - |r|)
 
     res = 0.0
@@ -112,7 +112,7 @@ def viscosityLap(r: ti.Vector, h):
     return res
 
 @ti.func
-def cubicKernel(r: ti.Vector, h):
+def cubicKernel(r, h):
     # value of cubic spline smoothing kernel
     r_len = r.norm()
     
@@ -131,7 +131,7 @@ def cubicKernel(r: ti.Vector, h):
     return res
 
 @ti.func
-def cubicGrad(r, h) -> ti.f64:
+def cubicGrad(r, h):
     # derivative of cubcic spline smoothing kernel
     r_len = r.norm()
     r_dir = r.normalized()
@@ -142,7 +142,7 @@ def cubicGrad(r, h) -> ti.f64:
     q = r_len / half_h
     
     # assert q > 0.0
-    res = ti.Vector([0.0, 0.0], dt=ti.f64)
+    res = ti.Vector([0.0, 0.0], dt=float)
     if q < 1.0:
         res = (k / half_h) * (-3. * q + 2.25 * q**2) * r_dir
     elif q < 2.0:
